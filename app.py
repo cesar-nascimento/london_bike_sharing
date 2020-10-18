@@ -26,42 +26,50 @@ df = pd.read_csv(
 app.layout = html.Div(
     [
         html.H1("London Bike Sharing Data", style={'text-align': 'center'}),
-        dcc.RangeSlider(
-            id='year_select_slider',
-            min=df.index.min().year,
-            max=df.index.max().year,
-            step=None,
-            marks={year: str(year)
-                   for year in df.index.year.unique()},
-            value=[df.index.min().year,
-                   df.index.max().year],
-            allowCross=False,
-        ),
-        dcc.Dropdown(
-            id='weekend_select_dropdown',
-            options=[
-                {
-                    'label': 'Only Weekends',
-                    'value': 1
-                }, {
-                    'label': 'Only Weekdays',
-                    'value': 0
-                }
+        html.Div(
+            [
+                dcc.RangeSlider(
+                    id='year_select_slider',
+                    min=df.index.min().year,
+                    max=df.index.max().year,
+                    step=None,
+                    marks={year: str(year)
+                           for year in df.index.year.unique()},
+                    value=[df.index.min().year,
+                           df.index.max().year],
+                    allowCross=False,
+                    className="mini_container"
+                ),
+                dcc.Dropdown(
+                    id='weekend_select_dropdown',
+                    options=[
+                        {
+                            'label': 'Only Weekends',
+                            'value': 1
+                        }, {
+                            'label': 'Only Weekdays',
+                            'value': 0
+                        }
+                    ],
+                    placeholder="Filter weekends",
+                    className="mini_container"
+                ),
+                dcc.Dropdown(
+                    id='holiday_select_dropdown',
+                    options=[
+                        {
+                            'label': 'Only Holidays',
+                            'value': 1
+                        }, {
+                            'label': 'Only Non Holidays',
+                            'value': 0
+                        }
+                    ],
+                    placeholder="Filter holidays",
+                    className="mini_container"
+                ),
             ],
-            placeholder="Filter weekends"
-        ),
-        dcc.Dropdown(
-            id='holiday_select_dropdown',
-            options=[
-                {
-                    'label': 'Only Holidays',
-                    'value': 1
-                }, {
-                    'label': 'Only Non Holidays',
-                    'value': 0
-                }
-            ],
-            placeholder="Filter holidays"
+            className="container-display"
         ),
         # dcc.Dropdown(
         #     id='holiday_select_dropdown',
@@ -138,8 +146,10 @@ app.layout = html.Div(
         #     component_id='is_weekend_container', component_property='children'
         # ),
         Output(component_id='grouped_days_plot', component_property='figure'),
-        Output(component_id='grouped_weather_code_plot', component_property='figure'),
-
+        Output(
+            component_id='grouped_weather_code_plot',
+            component_property='figure'
+        ),
     ],
     [
         Input(component_id='year_select_slider', component_property='value'),
@@ -183,12 +193,10 @@ def update_graph(year_selected, is_weekend, is_holiday):
 
     # Filter year selected
     dff = dff.loc[min_date:max_date]
-    query = dff.groupby(dff.index.hour).agg(
-        {
-            'cnt': 'mean',
-            't1': 'mean',
-        }
-    ).round(0)
+    query = dff.groupby(dff.index.hour).agg({
+        'cnt': 'mean',
+        't1': 'mean',
+    }).round(0)
 
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     fig.add_trace(
@@ -223,8 +231,13 @@ def update_graph(year_selected, is_weekend, is_holiday):
     )
     fig.update_xaxes(title_text="Hour of the day")
     fig.update_traces(textposition='top center')
-    fig.update_yaxes(title_text="Number of Shared Bikes", secondary_y=False)
-    fig.update_yaxes(title_text="Average Temperature", range=[0, 40], secondary_y=True)
+    fig.update_yaxes(
+        title_text="Average number of bikes shared for each hour",
+        secondary_y=False
+    )
+    fig.update_yaxes(
+        title_text="Average temperature", range=[0, 40], secondary_y=True
+    )
 
     def mode_(s):
         try:
@@ -234,26 +247,32 @@ def update_graph(year_selected, is_weekend, is_holiday):
 
     def get_weather_code(n: int):
         code = {
-            1: "Clear / mostly clear but have some values with haze/fog/patches of fog / fog in vicinity.",
-            2: "Scattered clouds / few clouds.",
-            3: "Broken clouds.",
-            4: "Cloudy.",
-            7: "Rain/ light Rain shower/ Light rain.",
-            10: "Rain with thunderstorm.",
-            26: "Snowfall.",
-            94: "Freezing Fog.",
+            1:
+                "Clear / mostly clear but have some values with haze/fog/patches of fog / fog in vicinity.",
+            2:
+                "Scattered clouds / few clouds.",
+            3:
+                "Broken clouds.",
+            4:
+                "Cloudy.",
+            7:
+                "Rain/ light Rain shower/ Light rain.",
+            10:
+                "Rain with thunderstorm.",
+            26:
+                "Snowfall.",
+            94:
+                "Freezing Fog.",
         }
         if n not in code.keys():
-            return("Invalid Weather Code!")
+            return ("Invalid Weather Code!")
         else:
             return code[n]
 
-    query2 = dff.resample('D').agg(
-        {
-            'cnt': 'mean',
-            'weather_code': mode_,
-        }
-    ).round(0)
+    query2 = dff.resample('D').agg({
+        'cnt': 'sum',
+        'weather_code': mode_,
+    }).round(0)
 
     fig2 = go.Figure()
     for weather_code, group in query2.groupby('weather_code'):
@@ -279,7 +298,7 @@ def update_graph(year_selected, is_weekend, is_holiday):
         font_size=10
     )
     fig2.update_xaxes(title_text="Weather Code")
-    fig2.update_yaxes(title_text="Number of Shared Bikes")
+    fig2.update_yaxes(title_text="Total number of bikes shared in a single day")
     return fig, fig2
 
 
