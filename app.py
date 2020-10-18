@@ -6,7 +6,7 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from datetime import date
+from datetime import datetime
 
 
 app = dash.Dash(__name__)
@@ -95,7 +95,7 @@ def update_graph(day_selected):
 
     query = df.loc[day_selected]
     
-    date_object = date.fromisoformat(day_selected)
+    date_object = datetime.strptime(day_selected, '%Y-%m-%d')
     selected_day_container = date_object.strftime('%B %d, %Y')
     
     is_holiday_container = "Is Holiday: {}".format(query['is_holiday'].mode()[0])    
