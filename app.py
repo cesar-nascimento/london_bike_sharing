@@ -11,9 +11,11 @@ from datetime import date
 
 app = dash.Dash(__name__)
 server = app.server
- 
+
+url = "https://raw.githubusercontent.com/cesar-nascimento/london_bike_sharing/master/london_bike_sharing_dataset.csv"
+
 df = pd.read_csv(
-    "./london_bike_sharing_dataset.csv",
+    url,
     parse_dates=['timestamp'],
     dtype={
         'is_holiday': 'bool',
