@@ -1,24 +1,19 @@
 body {
   background-color: #f2f2f2;
   margin: 5%;
+  line-height: 1.6;
+  font-weight: 400;
+  font-family: "Open Sans", "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: rgb(50, 50, 50);
 }
 
-.two.columns {
-  width: 16.25%;
-}
-
-.column,
-.columns {
-  margin-left: 0.5%;
-}
 
 .pretty_container {
   border-radius: 5px;
   background-color: #f9f9f9;
   margin: 10px;
   display: inline-block;
-  width: 45%;
-  padding: 15px;
+  padding: 20px;
   position: relative;
   box-shadow: 2px 2px 2px lightgrey;
 }
@@ -37,6 +32,10 @@ body {
   width: 300px;
 }
 
+.card {
+  margin: 0 10px;
+}
+
 p {
   font-weight: bold;
   font-size: 0.9rem;
@@ -44,7 +43,6 @@ p {
 
 h6 {
   font-weight: 300;
-  font-size: 1.2rem;
   line-height: 1.6;
   letter-spacing: 0;
   margin-bottom: 0.75rem;
