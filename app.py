@@ -100,13 +100,22 @@ app.layout = html.Div(
 
         # Second Row
         html.Div(
-            html.Div(
-                dcc.Graph(
-                    id='grouped_weather_code_plot',
-                    className="pretty_container"
+            [
+                html.Div(
+                    dcc.Graph(
+                        id='grouped_weather_code_plot',
+                        className="pretty_container"
+                    ),
+                    className="col-xl-6 col-sm-12"
                 ),
-                className="col-xl-6 col-sm-12"
-            ),
+                html.Div(
+                    dcc.Graph(
+                        id='grouped_weekdays_plot',
+                        className="pretty_container"
+                    ),
+                    className="col-xl-6 col-sm-12"
+                ),
+            ],
             className="row mx-md-n5",
             style={'margin': '20px auto'}
         ),
@@ -132,6 +141,7 @@ app.layout = html.Div(
     [
         Output('grouped_days_plot', 'figure'),
         Output('grouped_weather_code_plot', 'figure'),
+        Output('grouped_weekdays_plot', 'figure'),
     ], [
         Input('year_select_slider', 'value'),
         Input('weekend_select_dropdown', 'value'),
@@ -156,8 +166,11 @@ def update_graph(year_selected, is_weekend, is_holiday):
     min_date = f"{year_selected[0]}"
     max_date = f"{year_selected[1]}"
 
-    # Filter year selected
+    # Filter years selected
+
     dff = dff.loc[min_date:max_date]
+
+    # Building first graph
     query = dff.groupby(dff.index.hour).agg({
         'cnt': 'mean',
         't1': 'mean',
@@ -200,35 +213,12 @@ def update_graph(year_selected, is_weekend, is_holiday):
         title_text="Average temperature", range=[0, 40], secondary_y=True
     )
 
+    # Building second graph
     def mode_(s):
         try:
             return s.value_counts().index[0]
         except IndexError:
             return 0
-
-    def get_weather_code(n: int):
-        code = {
-            1:
-                "Clear / mostly clear but have some values with haze/fog/patches of fog / fog in vicinity.",
-            2:
-                "Scattered clouds / few clouds.",
-            3:
-                "Broken clouds.",
-            4:
-                "Cloudy.",
-            7:
-                "Rain/ light Rain shower/ Light rain.",
-            10:
-                "Rain with thunderstorm.",
-            26:
-                "Snowfall.",
-            94:
-                "Freezing Fog.",
-        }
-        if n not in code.keys():
-            return ("Invalid Weather Code!")
-        else:
-            return code[n]
 
     query2 = dff.resample('D').agg({
         'cnt': 'sum',
@@ -260,7 +250,23 @@ def update_graph(year_selected, is_weekend, is_holiday):
     )
     fig2.update_xaxes(title_text="Weather Code")
     fig2.update_yaxes(title_text="Total number of bikes shared in a single day")
-    return fig, fig2
+
+    # Building third graph
+    by_weekday = query2.groupby(query2.index.dayofweek).mean()
+    by_weekday.index = ['Mon', 'Tues', 'Wed', 'Thurs', 'Fri', 'Sat', 'Sun']
+
+    fig3 = go.Figure()
+    fig3.add_trace(go.Scatter(x=by_weekday.index, y=by_weekday['cnt']))
+    fig3.update_layout(
+        plot_bgcolor="#F9F9F9",
+        paper_bgcolor="#F9F9F9",
+        height=400,
+        margin=dict(l=20, r=20, t=20, b=20),
+        font_size=10
+    )
+    fig3.update_yaxes(title_text="Average total for each day of the week")
+
+    return fig, fig2, fig3
 
 
 if __name__ == '__main__':
