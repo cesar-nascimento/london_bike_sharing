@@ -5,7 +5,6 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from datetime import datetime
 
 app = dash.Dash(__name__)
 server = app.server
@@ -26,68 +25,90 @@ df = pd.read_csv(
 app.layout = html.Div(
     [
         html.H1("London Bike Sharing Data", style={'text-align': 'center'}),
+
+        # First Row
         html.Div(
             [
                 html.Div(
-                    [
-                        html.H4("Filter by year."),
-                        dcc.RangeSlider(
-                            id='year_select_slider',
-                            min=df.index.min().year,
-                            max=df.index.max().year,
-                            step=None,
-                            marks={
-                                year: str(year)
-                                for year in df.index.year.unique()
-                            },
-                            value=[df.index.min().year,
-                                   df.index.max().year],
-                            allowCross=False,
-                            className="card"
-                        ),
-                        html.H4("Filter by weekend / workday."),
-                        dcc.Dropdown(
-                            id='weekend_select_dropdown',
-                            options=[
-                                {
-                                    'label': 'Only Weekends',
-                                    'value': 1
-                                }, {
-                                    'label': 'Only Weekdays',
-                                    'value': 0
-                                }
-                            ],
-                            placeholder="Filter weekends",
-                            className="card"
-                        ),
-                        html.H4("Filter by holiday / workday."),
-                        dcc.Dropdown(
-                            id='holiday_select_dropdown',
-                            options=[
-                                {
-                                    'label': 'Only Holidays',
-                                    'value': 1
-                                }, {
-                                    'label': 'Only Non Holidays',
-                                    'value': 0
-                                }
-                            ],
-                            placeholder="Filter holidays",
-                            className="card"
-                        ),
-                    ],
-                    className="col-sm-4 pretty_container"
+                    html.Div(
+                        [
+                            html.H4("Filter by year."),
+                            dcc.RangeSlider(
+                                id='year_select_slider',
+                                min=df.index.min().year,
+                                max=df.index.max().year,
+                                step=None,
+                                marks={
+                                    year: str(year)
+                                    for year in df.index.year.unique()
+                                },
+                                value=[
+                                    df.index.min().year,
+                                    df.index.max().year
+                                ],
+                                allowCross=False,
+                                className="card"
+                            ),
+                            html.H4("Filter by weekend / workday."),
+                            dcc.Dropdown(
+                                id='weekend_select_dropdown',
+                                options=[
+                                    {
+                                        'label': 'Only Weekends',
+                                        'value': 1
+                                    }, {
+                                        'label': 'Only Weekdays',
+                                        'value': 0
+                                    }
+                                ],
+                                placeholder="Filter weekends",
+                                className="card"
+                            ),
+                            html.H4("Filter by holiday / workday."),
+                            dcc.Dropdown(
+                                id='holiday_select_dropdown',
+                                options=[
+                                    {
+                                        'label': 'Only Holidays',
+                                        'value': 1
+                                    }, {
+                                        'label': 'Only Non Holidays',
+                                        'value': 0
+                                    }
+                                ],
+                                placeholder="Filter holidays",
+                                className="card"
+                            ),
+                        ],
+                        className="pretty_container"
+                    ),
+                    className="col-xl-4 col-sm-12",
+                    style={'margin': '20px auto'}
                 ),
-                dcc.Graph(
-                    id='grouped_days_plot',
-                    className="col-sm-8 pretty_container"
+
+                # Averaged day graph
+                html.Div(
+                    dcc.
+                    Graph(id='grouped_days_plot', className="pretty_container"),
+                    className="col-xl-8 col-sm-12",
+                    style={'margin': '20px auto'}
                 )
             ],
-            className="row"
+            className="row mx-md-n5",
+            style={'margin': '20px auto'}
         ),
+
+        # Second Row
         html.Div(
-            dcc.Graph(id='grouped_weather_code_plot', className="col-sm-6 pretty_container"),
-            className="row"
+            html.Div(
+                dcc.Graph(
+                    id='grouped_weather_code_plot',
+                    className="pretty_container"
+                ),
+                className="col-xl-6 col-sm-12"
+            ),
+            className="row mx-md-n5",
+            style={'margin': '20px auto'}
         ),
 
         # Source Link
@@ -102,7 +123,8 @@ app.layout = html.Div(
                 )
             ]
         ),
-    ]
+    ],
+    className="container-fluid"
 )
 
 
@@ -173,10 +195,7 @@ def update_graph(year_selected, is_weekend, is_holiday):
     )
     fig.update_xaxes(title_text="Hour of the day")
     fig.update_traces(textposition='top center')
-    fig.update_yaxes(
-        title_text="Avg. bikes shared hourly",
-        secondary_y=False
-    )
+    fig.update_yaxes(title_text="Avg. bikes shared hourly", secondary_y=False)
     fig.update_yaxes(
         title_text="Average temperature", range=[0, 40], secondary_y=True
     )
