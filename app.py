@@ -18,6 +18,7 @@ df = pd.read_csv(
         'is_holiday': 'bool',
         'is_weekend': 'bool',
         'season': 'category',
+        'weather_code': 'int',
     },
     index_col='timestamp'
 )
@@ -106,14 +107,16 @@ app.layout = html.Div(
                         id='grouped_weather_code_plot',
                         className="pretty_container"
                     ),
-                    className="col-xl-6 col-sm-12"
+                    className="col-xl-6 col-sm-12",
+                    style={'margin': '20px auto'}
                 ),
                 html.Div(
                     dcc.Graph(
                         id='grouped_weekdays_plot',
                         className="pretty_container"
                     ),
-                    className="col-xl-6 col-sm-12"
+                    className="col-xl-6 col-sm-12",
+                    style={'margin': '20px auto'}
                 ),
             ],
             className="row mx-md-n5",
@@ -136,6 +139,21 @@ app.layout = html.Div(
     className="container-fluid"
 )
 
+layout_ax = dict(
+    zeroline=True,
+    zerolinewidth=2,
+    zerolinecolor='DarkGray',
+    gridcolor="LightGray",
+    rangemode="tozero",
+)
+
+layout_graph = dict(
+    plot_bgcolor="#F9F9F9",
+    paper_bgcolor="#F9F9F9",
+    height=500,
+    font_size=15,
+)
+
 
 @app.callback(
     [
@@ -150,10 +168,9 @@ app.layout = html.Div(
 )
 def update_graph(year_selected, is_weekend, is_holiday):
 
-    # Filter is_weekend selection
-
     dff = df.copy()
 
+    # Filter is_weekend selection
     if is_weekend is not None:
         weekend_query = dff['is_weekend'] == is_weekend
         dff = dff[weekend_query]
@@ -163,8 +180,8 @@ def update_graph(year_selected, is_weekend, is_holiday):
         holiday_query = dff['is_holiday'] == is_holiday
         dff = dff[holiday_query]
 
-    min_date = f"{year_selected[0]}"
-    max_date = f"{year_selected[1]}"
+    min_date = str(year_selected[0])
+    max_date = str(year_selected[1])
 
     # Filter years selected
 
@@ -200,17 +217,29 @@ def update_graph(year_selected, is_weekend, is_holiday):
     )
 
     fig.update_layout(
-        plot_bgcolor="#F9F9F9",
-        paper_bgcolor="#F9F9F9",
+        layout_graph,
+        title="Average hourly usage",
         height=400,
-        margin=dict(l=20, r=100, t=20, b=20),
-        font_size=15
+        margin=dict(l=20, r=100, t=40, b=20),
     )
-    fig.update_xaxes(title_text="Hour of the day")
+
+    fig.update_xaxes(
+        layout_ax,
+        title_text="Hour of the day",
+    )
+
     fig.update_traces(textposition='top center')
-    fig.update_yaxes(title_text="Avg. bikes shared hourly", secondary_y=False)
     fig.update_yaxes(
-        title_text="Average temperature", range=[0, 40], secondary_y=True
+        layout_ax,
+        title_text="Average bikes shared",
+        range=[0, 4000],
+        secondary_y=False
+    )
+    fig.update_yaxes(
+        layout_ax,
+        title_text="Average temperature",
+        range=[0, 40],
+        secondary_y=True
     )
 
     # Building second graph
@@ -231,6 +260,8 @@ def update_graph(year_selected, is_weekend, is_holiday):
             continue
         fig2.add_trace(go.Box(y=group["cnt"], name=f"Code: {weather_code}"))
     fig2.update_layout(
+        layout_graph,
+        title_text="Total bikes shared on a single day, grouped by weather code",
         legend_title_text="Weather Code:<br>\
         1 = Clear / mostly clear but have some values with<br>\
             haze/fog/patches of fog / fog in vicinity.<br>\
@@ -242,29 +273,24 @@ def update_graph(year_selected, is_weekend, is_holiday):
         26 = Snowfall.<br>\
         94 = Freezing Fog.<br>\
             ",
-        plot_bgcolor="#F9F9F9",
-        paper_bgcolor="#F9F9F9",
-        height=400,
-        margin=dict(l=20, r=100, t=20, b=20),
-        font_size=10
+        margin=dict(l=20, r=100, t=40, b=20),
     )
     fig2.update_xaxes(title_text="Weather Code")
-    fig2.update_yaxes(title_text="Total number of bikes shared in a single day")
+    fig2.update_yaxes(layout_ax, title_text="Daily total")
 
     # Building third graph
     by_weekday = query2.groupby(query2.index.dayofweek).mean()
     by_weekday.index = ['Mon', 'Tues', 'Wed', 'Thurs', 'Fri', 'Sat', 'Sun']
 
     fig3 = go.Figure()
-    fig3.add_trace(go.Scatter(x=by_weekday.index, y=by_weekday['cnt']))
+    fig3.add_trace(go.Bar(x=by_weekday.index, y=by_weekday['cnt']))
     fig3.update_layout(
-        plot_bgcolor="#F9F9F9",
-        paper_bgcolor="#F9F9F9",
-        height=400,
-        margin=dict(l=20, r=20, t=20, b=20),
-        font_size=10
+        layout_graph,
+        title_text="Average daily total, grouped by day of the week",
+        margin=dict(l=20, r=20, t=40, b=20),
     )
-    fig3.update_yaxes(title_text="Average total for each day of the week")
+    fig3.update_xaxes(layout_ax)
+    fig3.update_yaxes(layout_ax, title_text="Average daily total")
 
     return fig, fig2, fig3
 
