@@ -135,6 +135,17 @@ app.layout = html.Div(
                 )
             ]
         ),
+        html.H5(
+            [
+                "Github: ",
+                html.A(
+                    "https://github.com/cesar-nascimento/london_bike_sharing",
+                    href=
+                    "https://github.com/cesar-nascimento/london_bike_sharing",
+                    target="_blank"
+                )
+            ]
+        ),
     ],
     className="container-fluid"
 )
